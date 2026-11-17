@@ -1,15 +1,20 @@
 name: eShopOnWeb Build and Test
 
 #Triggers (uncomment line below to use it)
-#on: [push, workflow_dispatch]
+on: workflow_dispatch
+
+#Permissions required for OpenID Connect login to Azure
+permissions:
+  id-token: write
+  contents: read
 
 #Environment variables https://docs.github.com/en/actions/learn-github-actions/environment-variables
 env:
-  RESOURCE-GROUP: rg-eshoponweb-NAME
-  LOCATION: westeurope
+  RESOURCE-GROUP: rg-eshoponweb-westeurope
+  LOCATION: belgiumcentral
   TEMPLATE-FILE: infra/webapp.bicep
-  SUBSCRIPTION-ID: YOUR-SUBS-ID
-  WEBAPP-NAME: eshoponweb-webapp-NAME
+  SUBSCRIPTION-ID: 8a6b7b19-770b-4dcb-8993-214de588fbe0
+  WEBAPP-NAME: devops-webapp-westeurope-373429227
 
 jobs:
   #Build, test and publish .net web project in repository
@@ -69,11 +74,13 @@ jobs:
           name: bicep-template
           path: bicep-template
 
-      #Login in your azure subscription using a service principal (credentials stored as GitHub Secret in repo)
+      #Login in your azure subscription using a user-assigned managed identity with OpenID Connect (IDs stored as GitHub Secrets in repo)
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # Deploy Azure WebApp using Bicep file
       - name: deploy
